@@ -1,0 +1,5 @@
+psutil
+django
+openpyxl
+chardet
+pymysql

@@ -1,0 +1,421 @@
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <link rel="shortcut icon" href="/static/favicon.ico" />
+    <title>web scenarios</title>
+    <style>
+        .nav {
+            list-style-type: none;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #0a466a;
+        }
+        
+        .nav li {
+            float: left;
+        }
+        
+        .nav li a {
+            display: block;
+            color: #FFFFFF;
+            text-align: center;
+            padding: 14px 16px;
+            text-decoration: none;
+        }
+        
+        .nav li a:hover {
+            background-color: #111;
+        }
+        
+        .bg {
+            /*width: 1400px;*/
+            overflow: hidden;
+        }
+        
+        .left {
+            width: 200px;
+            height: 800px;
+            float: left;
+            background-color: #0a466a;
+        }
+        
+        .left ul {
+            list-style-type: none;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #0a466a;
+        }
+        
+        .left ul li a {
+            display: block;
+            color: #FFFFFF;
+            text-align: center;
+            padding: 14px 16px;
+            text-decoration: none;
+            width: 200px;
+        }
+        
+        .left ul li a:hover {
+            background-color: #111;
+        }
+        
+        .web_scenario {
+            float: left;
+            /*width: 1000px;*/
+            /* background-color: cornsilk; */
+        }
+        
+        .web_scenario ul {
+            list-style-type: none;
+        }
+        
+        .web_scenario .txt,
+        .web_scenario .web_btn {
+            /* width: 900px;*/
+            text-align: right;
+        }
+        /*.web_scenario .web_item {
+            width: 900px;
+        }*/
+        
+        .web_scenario .web_item table {
+            font-size: 11px;
+            color: #333333;
+            border-width: 1px;
+            border-color: #666666;
+            border-collapse: collapse;
+        }
+        
+        .web_scenario .web_item table th {
+            border-width: 1px;
+            padding: 8px;
+            border-style: solid;
+            border-color: #666666;
+            background-color: #dedede;
+        }
+        
+        .web_scenario .web_item table td {
+            border-width: 1px;
+            padding: 8px;
+            border-style: solid;
+            border-color: #666666;
+            background-color: #ffffff;
+        }
+        
+        .nginx,
+        .host_problem {
+            float: left;
+            display: none;
+        }
+        
+        .nginx ul,
+        .host_problem ul {
+            list-style-type: none;
+        }
+        
+        .nginx .nginx_export,
+        .host_problem .host_problem_refresh_div {
+            text-align: right;
+        }
+        
+        .nginx_export_btn {
+            text-decoration: none;
+            background-color: #EEEEEE;
+            color: #333333;
+            padding: 2px 6px 2px 6px;
+            border-top: 1px solid #CCCCCC;
+            border-right: 1px solid #333333;
+            border-bottom: 1px solid #333333;
+            border-left: 1px solid #CCCCCC;
+            font-size: 12px;
+        }
+        
+        .nginx_item,
+        .host_problem table {
+            font-size: 11px;
+            color: #333333;
+            border-width: 1px;
+            border-color: #666666;
+            border-collapse: collapse;
+        }
+        
+        .nginx_item th,
+        .host_problem table th {
+            border-width: 1px;
+            padding: 8px;
+            border-style: solid;
+            border-color: #666666;
+            background-color: #dedede;
+        }
+        
+        .nginx_item td,
+        .host_problem table td {
+            border-width: 1px;
+            padding: 8px;
+            border-style: solid;
+            border-color: #666666;
+        }
+    </style>
+    <script src="/static/jquery-2.1.1.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $(".web_show").click(
+                function() {
+                    $(".nginx").css({
+                        "display": "none",
+                    });
+                    $(".host_problem").css({
+                        "display": "none",
+                    });
+                    $(".web_scenario").css({
+                        "display": "block",
+                    });
+                });
+
+            $(".nginx_show").click(
+                function() {
+
+                    $(".web_scenario").css({
+                        "display": "none",
+                    });
+                    $(".host_problem").css({
+                        "display": "none",
+                    });
+                    $(".nginx").css({
+                        "display": "block",
+                    });
+                    $.get("/web_scenaris/", {
+                        query: "nginx"
+                    }, function(data) {
+                        var data = eval(data);
+                        var table_html = "";
+                        var td_color = "";
+                        if (data == "" || data == 'null') {
+                            alert("No data")
+                        } else {
+                            for (var i in data) {
+                                if (i % 2 == 0) {
+                                    td_color = "#CCCCCC"
+                                } else {
+                                    td_color = "#919191"
+                                }
+                                for (var j in data[i]) {
+                                    table_html += "<tr>";
+                                    table_html += "<td bgcolor=\"" + td_color + "\">" + i + "</td>";
+                                    table_html += "<td bgcolor=\"" + td_color + "\"><a href=" + data[i][j] + ">" + data[i][j] + "</a></td>";
+                                    table_html += "</tr>";
+                                }
+                            }
+                            $(".nginx_item tr:gt(2)").remove();
+                            $(".nginx_item").append(table_html);
+                        }
+
+                    });
+                });
+            $(".hosts_problem_show").click(function() {
+                $(".nginx").css({
+                    "display": "none",
+                });
+                $(".web_scenario").css({
+                    "display": "none",
+                });
+                $(".host_problem").css({
+                    "display": "block",
+                });
+                $.get("/web_scenaris/", {
+                    query: "hosts_problem_show"
+                }, function(data) {
+                    var data = eval(data);
+                    data.sort(function(o1, o2) {
+                        var n1 = parseFloat(o1["ignore"]);
+                        var n2 = parseFloat(o2["ignore"]);
+                        if (n1 > n2) {
+                            return 1;
+                        } else if (n1 < n2) {
+                            return -1;
+                        } else {
+                            return 0;
+                        }
+                    });
+                    var newTbody = init_host_problem_tbody(data);
+                    var oldTbody = $(".host_problem_item tbody")[0];
+                    if (oldTbody) {
+                        $(".host_problem_item")[0].replaceChild(newTbody, oldTbody);
+                    } else {
+                        $(".host_problem_item")[0].appendChild(newTbody);
+                    }
+
+
+                });
+            });
+            $(".host_problem_refresh").click(function() {
+                $.get("/web_scenaris/", {
+                    query: "hosts_problem_show"
+                }, function(data) {
+                    var data = eval(data);
+                    data.sort(function(o1, o2) {
+                        var n1 = parseFloat(o1["ignore"]);
+                        var n2 = parseFloat(o2["ignore"]);
+                        if (n1 > n2) {
+                            return 1;
+                        } else if (n1 < n2) {
+                            return -1;
+                        } else {
+                            return 0;
+                        }
+                    });
+                    var newTbody = init_host_problem_tbody(data);
+                    var oldTbody = $(".host_problem_item tbody")[0];
+                    $(".host_problem_item")[0].replaceChild(newTbody, oldTbody);
+                });
+            });
+
+        });
+
+        function host_problem_ignore_click(host, ignore) {
+            var url;
+            if (ignore == "0") {
+                url = "/web_scenaris/" + "?host_problem_ignore=" + host;
+            } else {
+                url = "/web_scenaris/" + "?host_problem_restore=" + host;
+            };
+            var xhr = new XMLHttpRequest();
+            xhr.open('GET', url, true);
+            xhr.send();
+            xhr.onload = function() {
+                if (this.status == 200) {
+                    alert("success\nclick the refresh button");
+                };
+            };
+        };
+
+        function init_host_problem_tbody(data) {
+            var tbody = document.createElement("tbody");
+            var tag = "";
+            var ignore = "";
+            var td_color = ""
+            for (var i = 0; i < data.length; i++) {
+                if (data[i].ignore == "1") {
+                    ignore = "restore";
+                    td_color = "#919191"
+                } else {
+                    ignore = "ignore";
+                    td_color = "#CCCCCC"
+                };
+                tag += '<tr>' +
+                    "<td bgcolor=\"" + td_color + "\">" + parseInt(i) + "</td>" +
+                    "<td bgcolor=\"" + td_color + "\">" + data[i]["host"] + "</td>" +
+                    "<td bgcolor=\"" + td_color + "\">" + data[i]["fall_counts"] + "</td>" +
+                    "<td bgcolor=\"" + td_color + "\">" + data[i]["nginx"] + "</td>" +
+                    "<td bgcolor=\"" + td_color + "\"><a href=# onclick=host_problem_ignore_click(\"" + data[i]["host"] + "\",\"" + data[i]["ignore"] + "\");>" + ignore + "</a></td>" +
+                    '</tr>';
+            };
+            tbody.innerHTML = tag;
+            return tbody;
+        };
+    </script>
+</head>
+
+<body>
+    <ul class="nav">
+        <li><a href="{% url 'zabbix_report' %}">report</a></li>
+        <li><a href="#">problems</a></li>
+        <li><a href="#">top</a></li>
+        <li><a href="{% url 'web_scenaris' %}">web scenaris</a></li>
+        <li><a href="{% url 'zichan_guanli' %}">zichan guanli</a></li>
+
+    </ul>
+    <div class="bg">
+        <div class="left">
+            <ul>
+                <li><a class="web_show" href="#">web scenario</a></li>
+                <li><a class="nginx_show" href="#">nginx</a></li>
+                <li><a class="hosts_problem_show" href="#">host problem</a></li>
+            </ul>
+        </div>
+        <div class="web_scenario">
+            <ul>
+                <li>
+                    <div class="txt"><label>search:</label>
+                        <input type="text"> <input type="submit"></div>
+                </li>
+                <!--li>
+                    <div class="web_btn"><input type="submit"></div>
+                </li-->
+                <br />
+                <li>
+                    <div class="web_item">
+                        <table>
+                            <tr>
+                                <th>No.</th>
+                                <th>host</th>
+                                <th>web scenario name</th>
+                                <th>url</th>
+                                <th>reachable</th>
+                                <th>code 200</th>
+                                <th>action</th>
+                            </tr>
+                            {% for web_scenario_all in web_scenario_all %}
+                            <tr>
+                                <td>{{ forloop.counter }}</td>
+                                <td>127.0.0.1</td>
+                                <td>{{ web_scenario_all.name }}</td>
+                                <td>{{ web_scenario_all.steps.0.url }}</td>
+                                <td>{{ web_scenario_all.reachable }}</td>
+                                <td>{{ web_scenario_all.code200 }}</td>
+                                <td>ignore</td>
+
+                            </tr>
+                            {% endfor %}
+                        </table>
+                    </div>
+                </li>
+            </ul>
+        </div>
+        <div class="nginx">
+            <ul>
+                <li>
+                    <div class="nginx_export"><a class="nginx_export_btn" href="/web_scenaris/?query=nginx_export">export xlsx</a></div>
+                </li>
+                <br />
+                <li>
+                    <table class="nginx_item">
+                        <tr>
+                            <th>NO.</th>
+                            <th>nginx</th>
+                        </tr>
+                    </table>
+                </li>
+            </ul>
+        </div>
+        <div class="host_problem">
+            <ul>
+                <li>
+                    <div class="host_problem_refresh_div">
+                        <button class="host_problem_refresh">refresh</button>
+                    </div>
+                </li>
+                <br />
+                <li>
+                    <table class="host_problem_item">
+                        <thead>
+                            <tr>
+                                <th>NO.</th>
+                                <th>host</th>
+                                <th>fall counts</th>
+                                <th>nginx</th>
+                                <th>action</th>
+                            </tr>
+                        </thead>
+                    </table>
+                </li>
+            </ul>
+
+        </div>
+    </div>
+</body>
+
+</html>

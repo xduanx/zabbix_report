@@ -1,0 +1,49 @@
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <link rel="shortcut icon" href="/static/favicon.ico" />
+    <title>cmdb</title>
+    <style>
+        .nav {
+            list-style-type: none;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #0a466a;
+        }
+        
+        .nav li {
+            float: left;
+        }
+        
+        .nav li a {
+            display: block;
+            color: #FFFFFF;
+            text-align: center;
+            padding: 14px 16px;
+            text-decoration: none;
+        }
+        
+        .nav li a:hover {
+            background-color: #111;
+        }
+    </style>
+
+</head>
+
+<body>
+    <ul class="nav">
+        <li><a href="{% url 'zabbix_report' %}">report</a></li>
+        <li><a href="#">problems</a></li>
+        <li><a href="#">top</a></li>
+        <li><a href="{% url 'web_scenaris' %}">web scenaris</a></li>
+        <li><a href="{% url 'zichan_guanli' %}">zichan guanli</a></li>
+    </ul>
+    {% for host in show_host %}
+    <li>{{ host.ip }}</li>
+    {% endfor %}
+
+</body>
+
+</html>

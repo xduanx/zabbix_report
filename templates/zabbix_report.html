@@ -1,0 +1,389 @@
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <link rel="shortcut icon" href="/static/favicon.ico" />
+    <title>zabbix_report</title>
+    <style>
+        .nav {
+            height: 30px;
+            background: #0a466a;
+        }
+        
+        .nav span {
+            color: #FFFFFF;
+        }
+        
+        ul {
+            list-style-type: none;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #0a466a;
+        }
+        
+        ul li {
+            float: left;
+        }
+        
+        li a {
+            display: block;
+            color: #FFFFFF;
+            text-align: center;
+            padding: 14px 16px;
+            text-decoration: none;
+        }
+        
+        li a:hover {
+            background-color: #111;
+        }
+        
+        .option {
+            margin-top: 20px;
+            margin-bottom: 20px;
+            /* height: 200px; */
+            margin-left: 100px;
+            margin-right: 100px;
+            text-align: center;
+        }
+        
+        .button_export {
+            text-decoration: none;
+            background-color: #EEEEEE;
+            color: #333333;
+            padding: 2px 6px 2px 6px;
+            border-top: 1px solid #CCCCCC;
+            border-right: 1px solid #333333;
+            border-bottom: 1px solid #333333;
+            border-left: 1px solid #CCCCCC;
+            font-size: 12px;
+        }
+        
+        .option li {
+            display: inline-block;
+            list-style: none;
+        }
+        
+        .option li div {
+            display: inline-block;
+        }
+        
+        .data_time {
+            width: 100%;
+            text-align: right;
+        }
+        
+        .horization {
+            text-align: center;
+        }
+        
+        .action {
+            text-align: center;
+        }
+        
+        textarea {
+            width: 200px;
+            height: 80px;
+        }
+        
+        .container_groups,
+        .container_items {
+            position: absolute;
+            display: none;
+            padding-left: 10px;
+        }
+        
+        .frame_groups,
+        .frame_items {
+            position: relative;
+            background: #fff;
+            padding: 6px;
+            width: 165;
+            font-size: 12px;
+            display: block;
+            -moz-box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.6);
+            -webkit-box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.6);
+            box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.6);
+        }
+        
+        .foot_groups,
+        .foot_items {
+            text-align: right;
+        }
+        
+        table,
+        tr,
+        td,
+        th {
+            padding: 0;
+            margin: auto;
+        }
+        
+        table {
+            width: 878px;
+            border-color: #FCFCFC;
+        }
+        
+        table tr {
+            line-height: 30px;
+            border-color: #FCFCFC;
+        }
+        
+        table th,
+        table td {
+            text-align: center;
+            border-color: #FCFCFC;
+            font-size: 12px
+        }
+        
+        table tr:nth-child(even) {
+            background: #F9F9F9;
+        }
+    </style>
+    <script src="/static/jquery-2.1.1.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $("#groups").focus(
+                function() {
+                    var offset = $(this).offset(),
+                        container = $('.container_groups');
+                    container.css({
+                        top: offset.top + Number($(this).css('height').replace('px', '')),
+                        left: offset.left
+                    }).show(100);
+                });
+
+            $("#items").focus(function() {
+                var offset = $(this).offset(),
+                    container = $('.container_items');
+                container.css({
+                    top: offset.top + Number($(this).css('height').replace('px', '')),
+                    left: offset.left
+                }).show(100);
+            });
+
+            $("#submit_groups").click(function() {
+                var vals = '',
+                    length;
+                $('.frame_groups input[type=checkbox]:checked').each(function() {
+                    vals += ($(this).next().text() + ';');
+                });
+                if ((length = vals.length) > 0) vals = vals.substr(0, length - 1);
+                $("#groups").val(vals)
+                $(".container_groups").hide(100)
+            });
+
+            $("#submit_items").click(function() {
+                var vals = '',
+                    length;
+                $('.frame_items input[type=checkbox]:checked').each(function() {
+                    vals += ($(this).next().text() + ';');
+                });
+                if ((length = vals.length) > 0) vals = vals.substr(0, length - 1);
+                $("#items").val(vals)
+                $(".container_items").hide(100)
+            });
+
+            $("#button_apply").click(function() {
+                $.get("/zabbix_report/", {
+                        action: 'query'
+                    },
+                    function(data) {
+                        var data = eval('(' + data + ')');
+                        if (parseInt(data["pid"]) > 0) {
+                            alert("The process is running...\npid :" + data["pid"] + "\ntime: " + (((Date.parse(new Date())) - (parseInt(data["start_time"]) * 1000)) / 60000).toFixed(1) + "min/140min");
+                        } else {
+                            if (confirm("generate data. it will take about 140 minutes......")) {
+                                $.get("/zabbix_report/", {
+                                    groups: document.getElementById("groups").value,
+                                    items: document.getElementById("items").value,
+                                    action: 'fetch'
+                                });
+                            };
+                        };
+                    });
+            });
+
+            $("#button_show").click(function() {
+                $.post("/zabbix_report/", {
+                        action: 'show',
+                        groups: $("#groups").val(),
+                        items: $("#items").val(),
+                        csrfmiddlewaretoken: '{{ csrf_token }}'
+                    },
+                    function(data, status) {
+                        var data = eval('(' + data + ')');
+                        if (data == "" || data == 'null') {
+                            alert("No data, select proper item please")
+                        } else {
+                            var thead = initThead();
+                            var tbody = initTboby(data);
+                            $("#table_content")[0].appendChild(tbody);
+                        }
+                    });
+
+            });
+            $("th").click(function() {
+                var sortname = this.getAttribute("type");
+                this.flag = this.flag == -1 ? 1 : -1;
+                var _this = this;
+                $.post("/zabbix_report/", {
+                        action: 'show',
+                        groups: $("#groups").val(),
+                        items: $("#items").val(),
+                        csrfmiddlewaretoken: '{{ csrf_token }}'
+                    },
+                    function(data, status) {
+                        var data = eval('(' + data + ')');
+                        data.sort(function(o1, o2) {
+                            var n1 = parseFloat(o1[sortname]);
+                            var n2 = parseFloat(o2[sortname]);
+                            if (n1 > n2) {
+                                return _this.flag;
+                            } else if (n1 < n2) {
+                                return -_this.flag;
+                            } else {
+                                return 0;
+                            }
+                        });
+                        var newTbody = initTboby(data);
+                        var oldTbody = $("tbody")[0];
+                        $("#table_content")[0].replaceChild(newTbody, oldTbody);
+                    }
+                );
+            });
+
+            $("#button_export").click(function() {
+                $.get("/zabbix_report/", {
+                    action: 'export_excel',
+                    groups: $("#groups").val(),
+                    items: $("#items").val()
+                });
+            });
+        });
+
+        function initThead() {
+            var thead = document.createElement("thead");
+            var tag = '<tr>' +
+                '<th type="num">NO.</th>' +
+                '<th type="host">host</th>' +
+                '<th type="item">item</th>' +
+                '<th type="total">total_space(GB)</th>' +
+                '<th type="free">free_space(GB)</th>' +
+                '<th type="used">used_percentage(%)</th>' +
+                '<th type="group">group</th>' +
+                '</tr>';
+            thead.innerHTML = tag;
+            return thead;
+        }
+
+        function initTboby(data) {
+            var tbody = document.createElement("tbody");
+            var tag = "";
+            for (var i = 0; i < data.length; i++) {
+                tag += '<tr>' +
+                    '<td>' + i + '</td>' +
+                    '<td>' + data[i].host + '</td>' +
+                    '<td>' + data[i].item + '</td>' +
+                    '<td>' + data[i].total + '</td>' +
+                    '<td>' + data[i].free + '</td>' +
+                    '<td>' + data[i].used + '</td>' +
+                    '<td>' + data[i].group + '</td>' +
+                    '</tr>';
+
+            };
+            tbody.innerHTML = tag;
+            return tbody;
+        }
+
+        /*
+        function generate_report() {
+            if (confirm("generate data. it will take about 140 minutes......")) {
+                var groups_selected = document.getElementById("groups").value;
+                var item_selected = document.getElementById("items").value;
+                var url = "/zabbix_report/" + "?groups=" + groups_selected + "&items=" + item_selected + "&action=query";
+                var xhr = new XMLHttpRequest();
+                xhr.open('GET', url, true);
+                xhr.send();
+            }
+        }
+        */
+    </script>
+</head>
+
+<body>
+    <ul>
+        <li><a href="{% url 'zabbix_report' %}">report</a></li>
+        <li><a href="#">problems</a></li>
+        <li><a href="#">top</a></li>
+        <li><a href="{% url 'web_scenaris' %}">web scenaris</a></li>
+        <li><a href="{% url 'zichan_guanli' %}">zichan guanli</a></li>
+    </ul>
+
+    <div class="option">
+        <li>
+            <div><label>groups</label></div>
+            <div><textarea readonly="readonly" id="groups"></textarea></div>
+        </li>
+        <li>
+            <div><label>hosts</label></div>
+            <div><textarea></textarea></div>
+        </li>
+        <li>
+            <div><label>items</label></div>
+            <div><textarea readonly="readonly" id="items"></textarea></div>
+        </li>
+    </div>
+
+
+    <div class="container_groups">
+        <div class="frame_groups">
+            {% for all_groups in all_groups %}
+            <div><input type="checkbox" id="{{all_groups.name}}" /><label for="{{all_groups.name}}">{{all_groups.name}}</label></div>
+            {% endfor %}
+            <div class="foot_groups"><a href="#" id="submit_groups">OK</a></div>
+        </div>
+    </div>
+    <div class="container_items">
+        <div class="frame_items">
+            {% for all_items in all_items %}
+            <div><input type="checkbox" id="{{all_items.name}}" /><label for="{{all_items.name}}">{{all_items.name}}</label></div>
+            {% endfor %}
+            <div class="foot_items"><a href="#" id="submit_items">OK</a></div>
+        </div>
+    </div>
+
+    <div class="data_time">
+        <label>data time: {{data_fetch_time}}</label>
+    </div>
+
+    <div class="action">
+        <!--button id="button_apply" onclick="generate_report()">fetch data</button-->
+        <button id="button_apply">fetch data</button>
+        <button id="button_show">show data</button>
+        <a class="button_export" href="/zabbix_report/?action=export_excel">export xlsx</a>
+    </div>
+
+    <div class="horization">
+        <hr/>
+    </div>
+
+    <div class="content">
+        <table id="table_content">
+            <thead>
+                <tr>
+                    <th type="num">NO.</th>
+                    <th type="host">host</th>
+                    <th type="item">item</th>
+                    <th type="total">total_space(GB)</th>
+                    <th type="free">free_space(GB)</th>
+                    <th type="used">used_percentage(%)</th>
+                    <th type="group">group</th>
+                </tr>
+            </thead>
+        </table>
+    </div>
+
+</body>
+
+</html>
